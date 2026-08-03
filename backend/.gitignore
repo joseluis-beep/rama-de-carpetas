@@ -1,17 +1,20 @@
-# dependencias 
+# Dependencias
 node_modules/
 
-# variables de entorno
+# Variables de entorno
 package-lock.json
 
-# uploads
-uploads
+# Uploads
+uploads/
 
-# builds
+# Builds
 dist/
 build/
 
-# cache
+# Caché
+.cache/
+
+# Logs
 logs/
 *.log
 npm-debug.log*
@@ -19,7 +22,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# temporales
+# Temporales
 tmp/
 temp/
 *.tmp
@@ -28,11 +31,16 @@ temp/
 .vscode/
 .idea/
 
-# sistema operativo
-.Ds_store
+# Sistema operativo
+.DS_Store
+Thumbs.db
 
-# docker
-dpcker-data/
+# Docker
+docker-data/
 *.pid
-#  configuracion sensible
+
+# Cobertura
+coverage/
+
+# Configuración sensible
 config/secrets.js
