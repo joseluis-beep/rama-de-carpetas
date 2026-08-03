@@ -131,6 +131,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  
   // RUTA 4: Eliminar tarea (DELETE /tasks/:id)
   if (req.url.startsWith('/tasks/') && req.method === 'DELETE') {
     const urlParts = req.url.split('/');

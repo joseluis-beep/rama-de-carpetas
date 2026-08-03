@@ -3,9 +3,9 @@ const API_URL = 'http://localhost:3000/tasks';
 
 // Sistema de sesión simulada (guarda y persiste el nombre del "autor" para el navegador)
 let AUTHOR = localStorage.getItem('todo_author_session');
-const currentUserText = document.getElementById('currentUser');
 
 // 2. CAPTURA CONSTANTES DEL ELEMENTOS DEL DOM
+const currentUserText = document.getElementById('currentUser');
 const tasksContainer = document.getElementById('tasksContainer');
 const logoutBtn = document.getElementById('logoutBtn');
 const taskForm = document.getElementById('taskForm');
@@ -16,8 +16,8 @@ const taskDescription = document.getElementById('taskDescription');
 const customModal = document.getElementById('customModal');
 const modalTitle = document.getElementById('modalTitle');
 const modalMessage = document.getElementById('modalMessage');
-let modalConfirmBtn = document.getElementById('modalConfirmBtn');
 const modalCancelBtn = document.getElementById('modalCancelBtn');
+const modalConfirmBtn = document.getElementById('modalConfirmBtn');
 
 const loginModal = document.getElementById('loginModal');
 const loginForm = document.getElementById('loginForm');
@@ -28,22 +28,22 @@ function openCustomModal(title, message, isConfirm = false, onConfirmCallback = 
   modalTitle.textContent = title;
   modalMessage.textContent = message;
 
-  modalCancelBtn.style.display = isConfirm ? 'inline-block' : 'none';
+  modalCancelBtn.style.display = isConfirm ? 'block' : 'none';
+  customModal.classList.add('active');
 
   const nuevoConfirmBtn = modalConfirmBtn.cloneNode(true);
+  const nuevoCancelBtn = modalCancelBtn.cloneNode(true);
   modalConfirmBtn.parentNode.replaceChild(nuevoConfirmBtn, modalConfirmBtn);
-  modalConfirmBtn = nuevoConfirmBtn;
+  modalCancelBtn.parentNode.replaceChild(nuevoCancelBtn, modalCancelBtn);
 
-  modalConfirmBtn.addEventListener('click', () => {
+  nuevoConfirmBtn.addEventListener('click', () => {
     customModal.classList.remove('active');
     if (onConfirmCallback) onConfirmCallback();
   });
 
-  modalCancelBtn.addEventListener('click', () => {
+  nuevoCancelBtn.addEventListener('click', () => {
     customModal.classList.remove('active');
   });
-
-  customModal.classList.add('active');
 }
 
 // 3. GUARDIA DE AUTENTICACIÓN (Manipulación de Flujo)
@@ -62,14 +62,14 @@ loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const name = loginInput.value.trim();
 
-  if (name && name.length >= 3) {
+  if (name && name.length >= 2) {
     AUTHOR = name;
     localStorage.setItem('todo_author_session', AUTHOR);
     loginModal.classList.remove('active');
     currentUserText.textContent = AUTHOR;
     fetchTasks();
   } else {
-    openCustomModal('Validación', 'Por favor ingresa un nombre válido (mínimo 3 caracteres).', false);
+    openCustomModal('Validación', 'Por favor ingresa un nombre válido (mínimo 2 caracteres).', false);
   }
 });
 
@@ -101,35 +101,62 @@ function renderTasks(tasks) {
     const taskCard = document.createElement('div');
     taskCard.className = `task-card ${task.is_completed ? 'completed' : ''}`;
 
-    const estiloBorrachura = `style="text-decoration: ${task.is_completed ? 'line-through' : 'none'}; color: ${task.is_completed ? '#9ca3af' : '#333'};"`;
-
-    taskCard.innerHTML = `
+    const setHtmlModoLectura = () => {
+      taskCard.innerHTML = `
       <div class="task-info">
-        <h3 ${estiloBorrachura}>${task.title}</h3>
-        ${task.description ? `<p ${estiloBorrachura}>${task.description}</p>` : ''}
-        <span class="author">Autor: ${task.author}</span>
+      <h3>${task.title}</h3>
+      <p>${task.description || ''}</p>
+      <span calss="author">Autor: ${task.author}</span>
       </div>
-      <div class="task-actions" style="display:flex; gap: 8px;">
-        <button class="btn-toggle" style="background-color: ${task.is_completed ? '#f59e0b' : '#10b981'}; width: auto; padding: 5px 10px; font-size: 0.85rem; border-radius: 4px; color: white; border:none; cursor:pointer;">
-          ${task.is_completed ? 'Reabrir' : 'Completar'}
-        </button>
-        <button class="btn-delete">Eliminar</button>
+      <div class="task-actions" style="display: flex; gap: 5px;">
+      <button class="btn-edit" style="background-color: #22563eb; font-size: 0.85rem; width: auto; padding: 5px 10px; color: whrite; border: none; border-radius: 4px; cusor: pointer;">Editar</button>
+      <button class="btn-delete" style="background-color: #dc2626; font-size: 0.85rem; width: auto; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer;">Eliminar</button>
       </div>
-    `;
+      `;
 
-    const btnCancelar = taskCard.querySelector('.btn-cancel-value');
-    const btnEliminar = taskCard.querySelector('.btn-delete');
+      taskCard.querySelector('.btn-delete').addEventListener('click', () => deleteTask(task.id, task.author));
+      taskCard.querySelector('.btn-edit').addEventListener('click', () => cambiarAmodoEdicion(taskCard, task));
+    };
 
-    btnCancelar?.addEventListener('click', () => deleteTask(task.id, task.author));
-
-    btnEliminar.addEventListener('click', () => {
-      openCustomModal('Confirmar Eliminación', `¿de seguro que deseas eliminar esta tarea de la base de datos?`, true, () => {
-        deleteTask(task.id, task.author);
-      });
-    });
-
+    setHtmlModoLectura();
     tasksContainer.appendChild(taskCard);
   });
+}
+
+// 5.1 interfaz dinamica: modo edicion inline
+function cambiarAmodoEdicion(taskCard, task) {
+  if (AUTHOR !== task.author) {
+    openCustomModal('Acceso Denegado', `No autorizado. Esta tarea le pertenece a "${task.author}" y tu eres "${AUTHOR}"`, false);
+    return;
+  }
+
+taskCard.innerHTML = `
+  <div class="task-edit-form" style ="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+    <input type="text" class="edit-title" value="${task.title}" style="padding: 5px; border: 1px solid #2563eb; border-radius: 4px;">
+    <textarea class="edit-desc" style="padding: 5px; border: 1px solid #2563eb; border-radius: 4px; resize: none;">${task.description || ''}</textarea>
+    <div class="display: flex; gap: 5px; justify-content: flex-end;">
+      <button class="btn-cancel-edit" style="backgrund-color: #6b7280; font-size: 0.85rem; width: auto; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancelar</button>
+      <button class="btn-save-edit" style="backgrund-color: #6b7280; font-size: 0.85rem; width: auto; padding: 5px 10px; color: white; border: none; border-radius: 4px; cursor: pointer;">Guardar</button>
+    </div>
+  </div>
+`;
+
+    const btnCancelar = taskCard.querySelector('.btn-cancel-edit');
+    const btnGuardar = taskCard.querySelector('.btn-save-edit');
+
+    btnCancelar.addEventListener('click', () => fetchTasks());
+
+    btnGuardar.addEventListener('click', () => {
+      const  nuevoTitulo = taskCard.querySelector('.edit-title').value.trim();
+      const  nuevaDescripcion = taskCard.querySelector('.edit-desc').value.trim();
+
+      if (!nuevoTitulo) {
+        openCustomModal('Validación', 'El título no puede estar vacío.', false);
+        return;
+      }
+
+      updateTask(task.id, nuevoTitulo, nuevaDescripcion, task.is_completed);
+    });
 }
 
 // 6. CREAR TAREA (POST)
