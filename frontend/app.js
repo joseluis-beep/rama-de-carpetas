@@ -76,7 +76,7 @@ loginForm.addEventListener('submit', (e) => {
 // 4. LEER TAREAS DESDE MYSQL (GET)
 async function fetchTasks() {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch (API_URL);
     const json = await response.json();
 
     if (json.status === 'success' && json.data.tasks) {
