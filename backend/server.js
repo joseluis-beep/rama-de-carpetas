@@ -117,7 +117,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        // 3. Ejecutar la actualización directa en MySQL con marcadores (?)
+        // 3. Ejecutar la actualización directa en MySQL con marcadores
         const sql = 'UPDATE tasks SET title = ?, description = ?, is_completed = ? WHERE id = ?';
         await pool.query(sql, [title, description || null, is_completed, taskId]);
 
